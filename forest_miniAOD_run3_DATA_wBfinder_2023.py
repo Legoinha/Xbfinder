@@ -29,12 +29,12 @@ process.source = cms.Source("PoolSource",
     ), 
 )
 
-import FWCore.PythonUtilities.LumiList as LumiList
-process.source.lumisToProcess = LumiList.LumiList(filename = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions23HI/Cert_Collisions2023HI_374288_375823_Golden.json').getVLuminosityBlockRange()
+#import FWCore.PythonUtilities.LumiList as LumiList
+#process.source.lumisToProcess = LumiList.LumiList(filename = '/eos/user/c/cmsdqm/www/CAF/certification/Collisions23HI/Cert_Collisions2023HI_374288_375823_Golden.json').getVLuminosityBlockRange()
 
 # number of events to process, set to -1 to process all events
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(20)
+    input = cms.untracked.int32(1000)
     )
 
 ###############################################################################
@@ -62,7 +62,7 @@ process.centralityBin.centralityVariable = cms.string("HFtowers")
 
 # root output
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string("HiForestMiniAOD.root"))
+    fileName = cms.string("HiForestMiniAOD_PbPb2023_Data.root"))
 
 # # edm output for debugging purposes
 # process.output = cms.OutputModule(
@@ -91,23 +91,23 @@ process.load('HeavyIonsAnalysis.EventAnalysis.l1object_cfi')
 from HeavyIonsAnalysis.EventAnalysis.hltobject_cfi import trigger_list_data_2023_skimmed
 process.hltobject.triggerNames = trigger_list_data_2023_skimmed
 
-process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
+#process.load('HeavyIonsAnalysis.EventAnalysis.particleFlowAnalyser_cfi')
 ################################
 # electrons, photons, muons
-process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
-process.ggHiNtuplizer.doMuons = cms.bool(False)
+#process.load('HeavyIonsAnalysis.EGMAnalysis.ggHiNtuplizer_cfi')
+#process.ggHiNtuplizer.doMuons = cms.bool(False)
 process.load("TrackingTools.TransientTrack.TransientTrackBuilder_cfi")
 ################################
 # jet reco sequence
-process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_data_cff')
-process.load('HeavyIonsAnalysis.JetAnalysis.akPu4CaloJetSequence_pponPbPb_data_cff')
-process.akPu4CaloJetAnalyzer.doHiJetID = True
+#process.load('HeavyIonsAnalysis.JetAnalysis.akCs4PFJetSequence_pponPbPb_data_cff')
+#process.load('HeavyIonsAnalysis.JetAnalysis.akPu4CaloJetSequence_pponPbPb_data_cff')
+#process.akPu4CaloJetAnalyzer.doHiJetID = True
 ################################
 # tracks
 process.load("HeavyIonsAnalysis.TrackAnalysis.TrackAnalyzers_cff")
 # muons (FTW)
 process.load("HeavyIonsAnalysis.MuonAnalysis.unpackedMuons_cfi")
-process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
+#process.load("HeavyIonsAnalysis.MuonAnalysis.muonAnalyzer_cfi")
 ###############################################################################
 
 # ZDC RecHit Producer
@@ -136,13 +136,13 @@ process.forest = cms.Path(
     process.l1object +
     process.trackSequencePbPb +
     #process.particleFlowAnalyser +
-    process.ggHiNtuplizer +
+    #process.ggHiNtuplizer +
     #process.zdcdigi +
     #process.QWzdcreco +
     process.zdcanalyzer +
-    process.unpackedMuons +
-    process.muonAnalyzer +
-    process.akPu4CaloJetAnalyzer
+    process.unpackedMuons #+
+    #process.muonAnalyzer +
+    #process.akPu4CaloJetAnalyzer
     )
 
 #customisation
@@ -161,7 +161,7 @@ doWTARecluster = True        # Add jet phi and eta for WTA axis
 # this is only for non-reclustered jets
 addCandidateTagging = False
 
-
+'''
 if addR3Jets or addR3FlowJets or addR4Jets or addR4FlowJets or addUnsubtractedR4Jets :
     process.load("HeavyIonsAnalysis.JetAnalysis.extraJets_cff")
     from HeavyIonsAnalysis.JetAnalysis.clusterJetsFromMiniAOD_cff import setupHeavyIonJets
@@ -236,7 +236,7 @@ if addCandidateTagging:
     process.akCs4PFJetAnalyzer.jetTag = "updatedPatJets"
 
     process.forest.insert(1,process.candidateBtagging*process.updatedPatJets)
-
+'''
 #########################
 # Event Selection -> add the needed filters here
 #########################
@@ -312,15 +312,47 @@ process.Bfinder.VtxChiProbCut = cms.vdouble(0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
 process.Bfinder.svpvDistanceCut = cms.vdouble(2.0, 2.0, 2.0, 2.0, 2.0, 2.0, 0.0)
 process.Bfinder.doTkPreCut = cms.bool(True)
 process.Bfinder.doMuPreCut = cms.bool(True)
-process.Bfinder.MuonTriggerMatchingPath = cms.vstring(
-    "HLT_HIL3Mu0NHitQ10_L2Mu0_MAXdR3p5_M1to5_v1")
-process.Bfinder.MuonTriggerMatchingFilter = cms.vstring(
-    "hltL3f0L3Mu0L2Mu0DR3p5FilteredNHitQ10M1to5")
+process.Bfinder.MuonTriggerMatchingPath = cms.vstring("")
+process.Bfinder.MuonTriggerMatchingFilter = cms.vstring("")
 process.BfinderSequence.insert(0, process.unpackedMuons)
 process.BfinderSequence.insert(0, process.unpackedTracksAndVertices)
 # process.unpackedMuons.muonSelectors = cms.vstring() # uncomment for pp
 
 process.p = cms.Path(process.BfinderSequence)
+
+# Muon filtering before running Bfinder to significantly speed up the processing
+
+
+MUONCUT = "isTrackerMuon && ((abs(eta) <= 1.0 && pt > 3.5) || (1.0 < abs(eta) <= 2.4 && pt > 1.2)) && innerTrack.hitPattern.trackerLayersWithMeasurement > 5 && innerTrack.hitPattern.pixelLayersWithMeasurement > 0"
+  
+process.muonSelector = cms.EDFilter("PATMuonRefSelector",
+                                        src = cms.InputTag("slimmedMuons"),
+                                        cut = cms.string(MUONCUT),
+                                        filter = cms.bool(True)
+)
+
+process.atLeastTwoMuons = cms.EDFilter("MuonRefPatCount",
+                                 src = cms.InputTag("slimmedMuons"),
+                                  cut = cms.string(MUONCUT),
+                                 minNumber = cms.uint32(2)
+                                 )
+
+
+
+# only process events containing at least one J/psi candidate
+
+process.dimuonSelection = cms.EDProducer("CandViewShallowCloneCombiner",
+                                    checkCharge = cms.bool(True),
+                                    cut = cms.string("mass > 2.8 && mass < 3.4"),
+                                    decay = cms.string("muonSelector@+ muonSelector@-")
+                                    )
+
+process.atLeastOneDimuon = cms.EDFilter("CandViewCountFilter",
+                                        src = cms.InputTag("dimuonSelection"),
+                                        minNumber = cms.uint32(1)
+                                        )
+
+process.p.replace(process.BfinderSequence, process.muonSelector * process.atLeastTwoMuons * process.dimuonSelection * process.atLeastOneDimuon * process.BfinderSequence)
 
 
 ###############################
@@ -328,7 +360,7 @@ import FWCore.ParameterSet.VarParsing as VarParsing
 ivars = VarParsing.VarParsing('analysis')
 
 ivars.maxEvents = 100
-ivars.outputFile='HiForestMINIAOD.root'
+ivars.outputFile='HiForestMINIAOD_PbPb2023_Data.root'
 ivars.inputFiles='root://xrootd-cms.infn.it//store/hidata/HIRun2023A/HIPhysicsRawPrime0/MINIAOD/PromptReco-v2/000/375/790/00000/56ad580f-b228-4f3c-b8e3-17f9d95c7654.root'
 ivars.parseArguments() # get and parse the command line arguments
 
